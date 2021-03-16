@@ -1,0 +1,3 @@
+- add limit to depth (max & min)
+- add checkers for win
+- add checkers for scoring
