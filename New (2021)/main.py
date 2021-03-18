@@ -73,7 +73,8 @@ class Grid:
 
     def generateGrids(self, player):
         grids = []
-        for column in range(7):
+        columnOrder = [3, 2, 4, 1, 5, 0, 6]
+        for column in columnOrder:
             if self.grid[column + 35] == 0:
                 grids.append((column, Grid(self.getMove(column, player))))
         return grids
