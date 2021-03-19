@@ -1,5 +1,14 @@
 import pygame, math, copy, os
 
+pygame.init()
+
+WIN_WIDTH = 800
+WIN_HEIGHT = 800
+ICON_IMG = pygame.image.load(os.path.join("imgs","icon.png"))
+GRID_IMG = pygame.image.load(os.path.join("imgs","grid.png"))
+COLOURS = {0: (255, 255, 255), 1: (255, 0, 0), -1: (255, 255, 0)}
+FONT = pygame.font.SysFont("georgia", 50)
+
 class Grid:
     def __init__(self, grid = [0]*42):
         self.grid = grid
@@ -96,23 +105,27 @@ class Grid:
 
         return score
 
-    def printGrid(self):
-        symbols = {0:' ', 1:'O', -1: 'X'}
-        print("-----------------------")
-        for i in range(5, -1, -1):
-            row = "|"
-            for j in range(7):
-                row += f"|{symbols[self.grid[(i * 7) + j]]}|"
-            print(row + "|")
-        print("-----------------------")
+    def checkDraw(self):
+        for pos in self.grid:
+            if pos == 0:
+                return False
+        return True
+
+    def displayGrid(self, win):
+        y_values = [400, 320, 240, 160, 80, 0]
+        for i in range(7):
+            for j in range(6):
+                pygame.draw.rect(win, COLOURS[self.grid[i + (7 * j)]], (i * 90, y_values[j], 90, 80))
 
 def minimax(grid, depth, alpha, beta, maximizingPlayer):
     if depth == 0 or grid.checkWin(-1) or grid.checkWin(1):
-        return grid.calculateScore(), (0, 0)
+        return grid.calculateScore(), -1
     if maximizingPlayer:
         value = -math.inf
         bestMove = None
-        for move, result in grid.generateGrids(1):
+        grids = grid.generateGrids(1)
+        print(len(grids))
+        for move, result in grids:
             old_value = value
             value = max(value, minimax(result, depth - 1, alpha, beta, False)[0])
             if old_value != value:
@@ -123,7 +136,9 @@ def minimax(grid, depth, alpha, beta, maximizingPlayer):
     else:
         value = math.inf
         bestMove = None
-        for move, result in grid.generateGrids(-1):
+        grids = grid.generateGrids(-1)
+        print(len(grids))
+        for move, result in grids:
             old_value = value
             value = min(value, minimax(result, depth - 1, alpha, beta, True)[0])
             if old_value != value:
@@ -133,25 +148,72 @@ def minimax(grid, depth, alpha, beta, maximizingPlayer):
                 break
     return value, bestMove
 
-g = Grid()
-g.printGrid()
+def drawGame(screen, win, grid, won, winner):
+    screen.fill([255, 255, 255])
+    grid.displayGrid(win)
+    screen.blit(win, (85, 160))
+    screen.blit(GRID_IMG, (80, 150))
+    if won:
+        win_text = FONT.render(winner, 1, (0, 0, 0))
+        restart_text = FONT.render("Press 'R' to restart.", 1, (0, 0, 0))
+        screen.blit(win_text, (400 - (win_text.get_width() // 2), 10))
+        screen.blit(restart_text, (400 - (restart_text.get_width() // 2), 800 - 30 - restart_text.get_height()))
+    pygame.display.update()
 
+pygame.display.set_caption("Connect 4")
+pygame.display.set_icon(ICON_IMG)
+screen = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+win = pygame.Surface((630, 480))
+
+clock = pygame.time.Clock()
+
+g = Grid()
+
+turn = 1
+winner = 0
 player = 1
 
-depth = 6
+depth = int(input("Enter depth: "))
 
-while True:
-    col = int(input("Column: "))
-    g.makeMove(col, player)
+run = True
+playing = True
+
+while run:
+    clock.tick(60)
     
-    if g.checkWin(1):
-        g.printGrid()
-        break
+    if g.checkWin(player) and playing:
+        winner = "Player wins!"
+        playing = False
+    if g.checkWin(-player) and playing:
+        winner = "Computer wins!"
+        playing = False
+    if g.checkDraw() and playing:
+        winner = "Draw!"
+        playing = False
 
-    g.makeMove(minimax(g, depth, -math.inf, math.inf, -player == 1)[1], -player)
-    
-    if g.checkWin(-1):
-        g.printGrid()
-        break
+    if turn == -player:
+        g.makeMove(minimax(g, depth, -math.inf, math.inf, -player == 1)[1], -player)
+        turn = player
 
-    g.printGrid()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+            pygame.quit()
+            quit()
+        elif event.type == pygame.MOUSEBUTTONDOWN and turn == player and playing:
+            if event.button == 1:
+                pos = pygame.mouse.get_pos()
+                if pos[0] >= 85 and pos[0] <= 715 and pos[1] >= 160 and pos[1] <= 640:
+                    if g.makeMove((pos[0] - 85) // 90, player):
+                        turn = -player
+
+        elif event.type == pygame.KEYDOWN and not playing:
+            if event.key == pygame.K_r:
+                player = -player
+                turn = player
+                g = Grid([0]*42)
+                if player != 1:
+                    g.makeMove(3, -player)
+                playing = True
+
+    drawGame(screen, win, g, not playing, winner)
