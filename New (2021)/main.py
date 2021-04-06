@@ -124,7 +124,6 @@ def minimax(grid, depth, alpha, beta, maximizingPlayer):
         value = -math.inf
         bestMove = None
         grids = grid.generateGrids(1)
-        print(len(grids))
         for move, result in grids:
             old_value = value
             value = max(value, minimax(result, depth - 1, alpha, beta, False)[0])
@@ -137,7 +136,6 @@ def minimax(grid, depth, alpha, beta, maximizingPlayer):
         value = math.inf
         bestMove = None
         grids = grid.generateGrids(-1)
-        print(len(grids))
         for move, result in grids:
             old_value = value
             value = min(value, minimax(result, depth - 1, alpha, beta, True)[0])
