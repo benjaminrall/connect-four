@@ -93,10 +93,10 @@ class Grid:
         score = 0
 
         if self.checkWin(1):
-            score += math.inf
+            score += 1000
 
         if self.checkWin(-1):
-            score -= math.inf
+            score -= 1000
 
         score += self.returnLineAmounts(3, 1) * 5
         score += self.returnLineAmounts(2, 1) * 2
@@ -189,7 +189,7 @@ while run:
         winner = "Draw!"
         playing = False
 
-    if turn == -player:
+    if turn == -player and playing:
         g.makeMove(minimax(g, depth, -math.inf, math.inf, -player == 1)[1], -player)
         turn = player
 
