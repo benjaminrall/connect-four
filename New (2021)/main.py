@@ -1,7 +1,6 @@
 import pygame, math, copy, os
 
-pygame.init()
-
+pygame.font.init()
 WIN_WIDTH = 800
 WIN_HEIGHT = 800
 ICON_IMG = pygame.image.load(os.path.join("imgs","icon.png"))
